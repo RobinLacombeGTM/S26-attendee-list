@@ -37,7 +37,7 @@ Give these steps one at a time and wait for the user after each:
 1. Open https://platform.slush.org/slush26/meeting-tool/browse in Chrome and log in with your own Slush account.
 2. Open the developer tools: `Cmd + Option + I` on Mac, `F12` or `Ctrl + Shift + I` on Windows. Click the **Network** tab.
 3. In the filter box at the top of the Network tab, type `search.slush.org`. Then scroll the attendee list a little so requests appear.
-4. Right-click a line that starts with `all?mode=` and choose **Copy > Copy as cURL** (on Windows: **Copy as cURL (bash)**).
+4. Each request shows up twice: once with Type `preflight` and once with Type `fetch`. Right-click a line that starts with `all?mode=` and has Type **fetch** (not `preflight`), then choose **Copy > Copy as cURL** (on Windows: **Copy as cURL (bash)**). If the Type column is hidden, right-click any column header and tick **Type**.
 5. Come back here and say "copied". Do not paste it.
 
 When they say it is copied, save the clipboard straight to a file without displaying it:
@@ -45,7 +45,7 @@ When they say it is copied, save the clipboard straight to a file without displa
 - Windows (PowerShell): `Get-Clipboard | Set-Content slush_curl.txt`
 - Linux: `xclip -o -selection clipboard > slush_curl.txt`
 
-Then check the file holds a token without showing it: `grep -ci "authorization" slush_curl.txt` must print 1 or more. If it prints 0, they copied the wrong line. Go back to step 4.
+Then check the file holds a token without showing it: `grep -ciE "authorization: *[a-z0-9]" slush_curl.txt` must print 1 or more. If it prints 0, they copied the wrong line, most often the `preflight` one. Go back to step 4.
 
 The token lives about 15 minutes. If it expires before the export ends, repeat step 1 and rerun `scrape`. It resumes where it stopped.
 
@@ -56,7 +56,7 @@ python3 SCRIPTS/slush_scrape.py probe --curl slush_curl.txt
 ```
 2 requests. It prints the account (for example `logged in as jane@acme.com`) and the request count for a full export.
 
-Ask: "The session belongs to <account>. Is that your own Slush account? The full export sends about <N> requests to Slush, one per second, about <M> minutes. Shall I start?" Only on a clear yes:
+Ask one question: "Ready to export with <account>: about <N> requests, one per second, about <M> minutes (with one fresh login copy halfway). Go?" If the user already said the session is theirs, a yes covers both the account and the budget. If the account looks like someone else's (another name, a colleague's address), apply rule 1 before asking. Only on a clear yes:
 
 ```
 python3 SCRIPTS/slush_scrape.py scrape --curl slush_curl.txt --budget <the number probe printed>

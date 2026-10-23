@@ -67,7 +67,12 @@ def read_token(curl_path: Path) -> str:
         os.chmod(curl_path, 0o600)
     except OSError:
         pass
-    m = re.search(r"authorization:\s*(?:Bearer\s+)?([^'\"\n\\]+)", curl_path.read_text(), re.I)
+    text = curl_path.read_text()
+    if re.search(r"-X\s+'?OPTIONS|access-control-request-method", text, re.I):
+        raise SystemExit("[auth] this is the preflight copy (OPTIONS), not the real request. In the Network tab, "
+                         "each request shows twice: copy the line whose Type is 'fetch' (or 'xhr'), "
+                         "not 'preflight'.")
+    m = re.search(r"authorization:\s*(?:Bearer\s+)?([^'\"\n\\]+)", text, re.I)
     if not m:
         raise SystemExit("[auth] no authorization header in that cURL. Copy a request to search.slush.org "
                          "(Network tab, filter 'search.slush.org', right-click > Copy > Copy as cURL).")

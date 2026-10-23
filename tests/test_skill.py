@@ -152,6 +152,11 @@ def main():
         fs = FakeSession()
         text, stop = run("probe", t, fs, curl_text="curl https://example.com")
         ok &= check("cURL without token: clear error, no request", stop and not fs.calls)
+    with tempfile.TemporaryDirectory() as t:
+        fs = FakeSession()
+        text, stop = run("probe", t, fs, curl_text="curl 'https://search.slush.org/x' -X 'OPTIONS' "
+                         "-H 'access-control-request-headers: authorization,content-type'")
+        ok &= check("preflight copy: named as such, no request", stop and "preflight" in stop and not fs.calls)
     for raw, want in (("https://linkedin/in/jane-doe", "https://www.linkedin.com/in/jane-doe/"),
                       ("linkedin.com.in/jane", "https://www.linkedin.com/in/jane/"),
                       ("https://www.linkedin.com/company/acme/", ""), ("https://www.linkedin.com/feed/", "")):
