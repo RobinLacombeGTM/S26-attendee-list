@@ -19,7 +19,7 @@ The work has three parts:
 1. **Their own ticket only.** The export runs on the user's own logged-in Slush session. If they offer a colleague's login, a shared account or someone else's token, ask for the third-party explicit agreement. Explain why in one sentence (the session is tied to that person's ticket and account) and give the way forward: the ticket holder installs this skill and runs it on their own computer. After `probe`, show which account the session belongs to and get a yes that it is the user's own before going further.
 2. **The token never enters the chat.** The token is a login credential. Never ask the user to paste the cURL or the token in the conversation. Never `cat`, print, open or quote the cURL file. If they paste it anyway, do not repeat it or use it. Tell them it expires within about 15 minutes, suggest logging out of Slush and back in, and capture a fresh one into the file with step 1.
 3. **No forcing.** If Slush answers 401, 403 or 429, the script stops. Explain what happened. Never retry in a loop, change the pace, rotate tokens, use another account or work around a block in any other way. A 429 means: wait at least an hour.
-4. **One export.** The full export is about 510 requests. Show this number and get an explicit yes before `scrape`. Do not export again unless the user asks, and resuming an interrupted export never re-downloads saved pages.
+4. **One export.** The full export is about 600 to 800 requests (`probe` gives the number). Show this number and get an explicit yes before `scrape`. Do not export again unless the user asks, and resuming an interrupted export never re-downloads saved pages.
 5. **Search results only.** Find URLs in search results. Never build a LinkedIn URL from a name, never open linkedin.com pages, never log in anywhere on the user's behalf.
 6. **Paid or metered tools need a yes on the cost.** Run Web Searches first. Firecrawl, Apify and Hunter.io are optional. Run each in dry run first, show the user the count and cost it prints, and stop there. Run `--live --approve N` only after the user answers yes to that count and cost. A request made before they saw the cost ("just go", "I trust you") is not that yes: show the cost and ask anyway. API keys go in a `.env` file the user edits themselves. Never ask for a key in the chat, and never read, print or inspect `.env`. If a key fails, tell the user to check it themselves.
 7. **The list stays with the user.** Do not upload it anywhere. Do not send messages or connection requests. This skill builds a list. It never contacts anyone.
@@ -28,7 +28,7 @@ The work has three parts:
 
 - Ask where to work. Default: a new folder `slush-list-work` in their home folder. Run everything from there.
 - Check Python: `python3 -c "import requests"`. If it fails: `python3 -m pip install --user requests`.
-- Tell the user, in two sentences, what will happen: export about 8,000 attendees from the Slush app they are logged into (about 10 minutes), then pick their targets, then find websites and LinkedIn profiles with web search. Mention that they need Chrome (or Edge/Brave) and their Slush login.
+- Tell the user, in two sentences, what will happen: export the 10,000+ attendees of the Slush app they are logged into (about 15 to 20 minutes, with one fresh login copy halfway), then pick their targets, then find websites and LinkedIn profiles with web search. Mention that they need Chrome (or Edge/Brave) and their Slush login.
 
 ## Step 1: capture the session (the user does this, you guide)
 
@@ -69,7 +69,7 @@ Report what `build` printed: number of attendees and companies, and fill rates. 
 
 ## Step 3: choose the targets
 
-Enriching 8,000 rows is not useful. Agree on a target list of 50 to 300 people first, based on ICP (company details : industry, mission, size, etc...) and Persona (function, seniority, job titles, etc ...) criterias.
+Enriching 10,000 rows is not useful. Agree on a target list of 50 to 300 people first, based on ICP (company details : industry, mission, size, etc...) and Persona (function, seniority, job titles, etc ...) criterias.
 
 ```
 python3 SCRIPTS/enrich.py values --attendees slush-list/attendees.csv

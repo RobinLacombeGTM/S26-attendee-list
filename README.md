@@ -36,7 +36,7 @@ Want to check the code first? [AUDIT.md](AUDIT.md) lists every place the code se
 ## What happens
 
 1. Claude shows you how to copy your Slush session from the browser (about 1 minute). The login token goes straight into a local file and never into the chat.
-2. Claude exports the directory you can already browse in the Slush app: about 8,000 attendees, about 10 minutes, one request per second.
+2. Claude exports the directory you can already browse in the Slush app: 10,000+ attendees, about 15 to 20 minutes, one request per second. The login token lasts about 15 minutes, so Claude asks you once for a fresh copy and the export resumes where it stopped.
 3. You say who you want to meet (roles, countries, company types, exhibitors). Claude narrows the list to 50 to 300 people.
 4. Claude finds the missing websites and LinkedIn profiles with web search. A profile counts as found only when the search result shows both the person's name and their company. The rest is marked for a quick manual check.
 5. You get a spreadsheet (`enriched.csv`) with a status and the evidence for every link.

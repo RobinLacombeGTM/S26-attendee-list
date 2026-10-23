@@ -145,17 +145,34 @@ def total_pages(data: dict) -> int:
     return int((data.get("meta") or {}).get("page", {}).get("total_pages") or 0)
 
 
+def last_page(data: dict) -> bool:
+    """End of the directory: a short or empty page, or no cursor. Not total_pages: the search engine
+    caps the reported count at 10,000 results, so the real directory can be longer."""
+    return len(data.get("results") or []) < PAGE_SIZE or (data.get("meta") or {}).get("searchAfter") is None
+
+
 # ---------------------------------------------------------------- probe --
 def cmd_probe(args):
     c = Client(read_token(args.curl), args.event, budget=2)
-    need = 0
+    need, capped = 0, False
     for mode in MODES:
         data = c.page(mode, None)
         meta = (data.get("meta") or {}).get("page", {})
-        need += total_pages(data)
-        print(f"{mode:9} {meta.get('total_results')} results, {total_pages(data)} pages")
+        total = int(meta.get("total_results") or 0)
+        if total >= 10000:  # the search engine stops counting at 10,000: the real number is unknown
+            capped = True
+            need += int(total_pages(data) * 1.3) + 1
+            print(f"{mode:9} at least {total} results (Slush stops counting at 10,000), {total_pages(data)}+ pages")
+        else:
+            need += total_pages(data)
+            print(f"{mode:9} {total} results, {total_pages(data)} pages")
     done = sum(len(list(raw_files(args.raw_dir, m))) for m in MODES) if args.raw_dir.exists() else 0
-    print(f"\nFull export: about {need} requests (~{need * 1.5 / 60:.0f} min at 1 request per second).")
+    print(f"\nFull export: {'up to ' if capped else 'about '}{need} requests "
+          f"(~{need * 1.5 / 60:.0f} min at 1 request per second; a login token lasts about 15 min, "
+          "so expect to copy a fresh one and resume once).")
+    if capped:
+        print("The budget includes a 30% margin because the real count is above 10,000. "
+              "Requests not needed are not sent.")
     if done:
         print(f"{done} pages already saved in {args.raw_dir}: those will not be requested again.")
     print(f"Next step, only with the user's OK:  scrape --budget {need - done + 10}")
@@ -177,7 +194,7 @@ def cmd_scrape(args):
         if saved:  # resume after the last saved page
             last = json.loads(saved[-1].read_text())
             search_after, pages = (last.get("meta") or {}).get("searchAfter"), total_pages(last)
-            if not last.get("results") or search_after is None or (pages and n >= pages):
+            if last_page(last):
                 print(f"[{mode}] complete ({n} pages already saved)", file=sys.stderr)
                 continue
             print(f"[{mode}] resuming after page {n}", file=sys.stderr)
@@ -189,7 +206,7 @@ def cmd_scrape(args):
             search_after = (data.get("meta") or {}).get("searchAfter")
             if n % 25 == 0 or n == pages:
                 print(f"[{mode}] page {n}/{pages}", file=sys.stderr)
-            if not data.get("results") or search_after is None or (pages and n >= pages):
+            if last_page(data):
                 break
         print(f"[{mode}] done: {n} pages", file=sys.stderr)
     print(f"Export finished with {c.sent} requests. Delete the cURL file now: it holds your login token.")

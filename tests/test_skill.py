@@ -37,17 +37,22 @@ class Resp:
 class FakeSession:
     """Serves `pages` result pages per mode, or a fixed status code."""
 
-    def __init__(self, code=200, pages=3):
-        self.code, self.pages, self.calls = code, pages, []
+    def __init__(self, code=200, pages=3, real_pages=None, total=99):
+        self.code, self.pages, self.real_pages, self.total, self.calls = code, pages, real_pages, total, []
 
     def post(self, url, headers=None, json=None, timeout=None):
         self.calls.append(url)
         if self.code != 200:
             return Resp(self.code)
-        n = len([c for c in self.calls if c == url])
         mode = "users" if "mode=users" in url else "companies"
-        res = [{"user": {"user_id": f"{mode}-{n}", "first_name": "A", "last_name": f"B{n}"}, "company": {}}]
-        return Resp(200, {"results": res, "meta": {"page": {"total_pages": self.pages, "total_results": 99},
+        after = (json or {}).get("options", {}).get("page", {}).get("searchAfter")
+        n = int(after[1].split("-")[1]) + 1 if after else 1  # like Slush: the cursor decides the page
+        real = self.real_pages or self.pages  # real_pages > pages: Slush reports a capped count
+        if n > real:
+            return Resp(200, {"results": [], "meta": {"page": {"total_pages": self.pages}, "searchAfter": None}})
+        res = [{"user": {"user_id": f"{mode}-{n}-{i}", "first_name": "A", "last_name": f"B{n}"}, "company": {}}
+               for i in range(s.PAGE_SIZE if n < real else 5)]
+        return Resp(200, {"results": res, "meta": {"page": {"total_pages": self.pages, "total_results": self.total},
                                                    "searchAfter": [1, f"{mode}-{n}"]}})
 
 
@@ -118,6 +123,14 @@ def main():
         ok &= check("resume: saved pages are not requested again",
                     saved == 7 and total == 80 and len(fs2.calls) == 73, f"saved {saved}, total {total}, "
                     f"second run {len(fs2.calls)} calls")
+    with tempfile.TemporaryDirectory() as t:
+        fs = FakeSession(pages=4, real_pages=6, total=10000)
+        text, stop = run("scrape", t, fs, budget=50)
+        saved = len(list((Path(t) / "out" / "raw").glob("*.json")))
+        ok &= check("capped count (Slush says 4 pages, 6 exist): all 6 pages saved per mode", saved == 12,
+                    f"{saved} pages saved")
+        text, stop = run("probe", t, FakeSession(pages=417, total=10000))
+        ok &= check("probe flags a capped count and adds a margin", "at least 10000" in text and "up to" in text)
     with tempfile.TemporaryDirectory() as t:
         fs = FakeSession()
         text, stop = run("scrape", t, fs, budget=0)
