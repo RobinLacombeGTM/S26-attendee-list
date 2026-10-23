@@ -1,0 +1,12 @@
+{
+  "_help": "Every list is optional: leave it empty [] to keep everyone. Values come from the Slush directory (run the summary in SKILL.md step 4 to see them).",
+  "countries": ["FI", "SE", "NO", "DK"],
+  "company_types": ["startup"],
+  "partner_types": [],
+  "occupations": [],
+  "business_types": ["b2b"],
+  "title_include": ["ceo", "chief executive", "founder", "cro", "chief revenue", "chief commercial", "vp sales", "head of sales", "sales director"],
+  "title_exclude": ["intern", "student", "assistant", "investor", "partner at"],
+  "max_per_company": 2,
+  "limit": 150
+}
