@@ -17,7 +17,9 @@ Pick one of three ways.
 
 **Ask Claude.** Open Claude Code and paste:
 
-> Install the skill from https://github.com/RobinLacombeGTM/S26-attendee-list into ~/.claude/skills/slush-attendee-list
+> Install this skill with git clone: https://github.com/RobinLacombeGTM/S26-attendee-list into ~/.claude/skills/slush-attendee-list
+
+Claude asks your permission before writing into `~/.claude/`. Approve it.
 
 **One command.** In a terminal:
 
